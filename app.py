@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 # =========================================================
 # HEADER（凍結）
 # =========================================================
-st.set_page_config(page_title="ばねレート簡易判定ツール", layout="centered")
+st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wide")
 
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
@@ -105,7 +105,7 @@ if st.button("計算開始"):
     st.metric("線間密着位置", f"{S_max:.1f} mm")
 
     # =========================================================
-    # GRAPH（凍結構造＋表示改善）
+    # GRAPH（凍結構造）
     # =========================================================
     x = np.linspace(0, S_max, 400)
     fig = go.Figure()
