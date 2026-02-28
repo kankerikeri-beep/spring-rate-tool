@@ -10,7 +10,7 @@ st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wi
 # =========================
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTube『チャンネルこぼれ小話 タミケンバーン』連動ツール")
-st.caption("※本ツールは診断ではなく、ばねの性格を数値で把握するためのものです")
+st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
 st.markdown(
     "▶ 使用方法解説動画（YouTube）  \n"
@@ -47,7 +47,7 @@ with col2:
     P = st.number_input("プリロード [mm]", min_value=0.0, value=0.0, step=0.1)
 
 with col3:
-    st.subheader("構造補足（実測）")
+    st.subheader("構造補足")
     L_dense_free = st.number_input("密巻自由長 [mm]", min_value=0.0, value=205.0, step=0.1)
     seat_dense = st.number_input("座巻厚（密巻側）[mm]", min_value=0.0, value=1.3, step=0.1)
     seat_coarse = st.number_input("座巻厚（荒巻側）[mm]", min_value=0.0, value=1.3, step=0.1)
