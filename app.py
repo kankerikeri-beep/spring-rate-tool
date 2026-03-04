@@ -1,14 +1,8 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import plotly.io as pio
-import io
-from PIL import Image, ImageDraw
-import importlib
 
 st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wide")
-
-kaleido_available = importlib.util.find_spec("kaleido") is not None
 
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
@@ -44,62 +38,49 @@ seat_coarse = st.number_input("座巻厚（荒巻側）[mm]",0.0,value=3.0,step=
 
 S_susp = st.number_input("サスペンション最大ストローク量 [mm]",0.0,value=97.0,step=0.1)
 
-G=78500
-Dm=Do-d
+G = 78500
+Dm = Do - d
 
-solid_dense=d*N_dense
-L_solid_dense=solid_dense+seat_dense
-L_solid_total=d*(N_dense+N_coarse)+seat_dense+seat_coarse
+solid_dense = d * N_dense
+L_solid_dense = solid_dense + seat_dense
+L_solid_total = d * (N_dense + N_coarse) + seat_dense + seat_coarse
 
-S_max=max(0,L_free-L_solid_total)
+S_max = max(0, L_free - L_solid_total)
 
-is_single=(N_dense==0) or (N_coarse==0)
+k_dense = (G * d**4) / (8 * Dm**3 * N_dense)
+k_coarse = (G * d**4) / (8 * Dm**3 * N_coarse)
 
-if is_single:
+k_initial = 1 / ((1 / k_dense) + (1 / k_coarse))
+k_late = k_coarse
 
-    N_effective=N_dense if N_coarse==0 else N_coarse
-    k_initial=(G*d**4)/(8*Dm**3*N_effective)
-    k_late=k_initial
-    S_change=0
+S_change = L_dense_free - L_solid_dense - P
+S_change = max(0,S_change)
 
-else:
+if unit == "kgf/mm":
 
-    k_dense=(G*d**4)/(8*Dm**3*N_dense)
-    k_coarse=(G*d**4)/(8*Dm**3*N_coarse)
-
-    k_initial=1/((1/k_dense)+(1/k_coarse))
-    k_late=k_coarse
-
-    S_change=max(0,L_dense_free-L_solid_dense-P)
-
-if unit=="kgf/mm":
-
-    k_initial/=9.80665
-    k_late/=9.80665
-
-F_change=k_initial*(P+S_change)
+    k_initial /= 9.80665
+    k_late /= 9.80665
 
 def calc_load(x):
 
-    x_real=P+x
+    x_real = P + x
 
-    if is_single:
-        return k_initial*x_real
+    if x <= S_change:
+        return k_initial * x_real
 
-    if x<=S_change:
-        return k_initial*x_real
+    F_change = k_initial * (P + S_change)
+    return F_change + k_late * (x - S_change)
 
-    return F_change+k_late*(x-S_change)
+F_change = k_initial * (P + S_change)
+F_susp = calc_load(min(S_susp,S_max))
 
-F_susp=calc_load(min(S_susp,S_max))
-
-gap_dense=(L_dense_free/N_dense)-d if N_dense>0 else None
-gap_coarse=((L_free-L_dense_free)/N_coarse)-d if N_coarse>0 else None
+gap_dense = (L_dense_free / N_dense) - d if N_dense > 0 else None
+gap_coarse = ((L_free - L_dense_free) / N_coarse) - d if N_coarse > 0 else None
 
 st.divider()
 st.header("④ 測定結果")
 
-col1,col2=st.columns(2)
+col1,col2 = st.columns(2)
 
 with col1:
 
@@ -121,12 +102,12 @@ with col2:
 
 st.metric("線間密着位置",f"{S_max:.1f} mm")
 
-x=np.linspace(0,S_max,400)
+x = np.linspace(0,S_max,400)
 
-fig=go.Figure()
+fig = go.Figure()
 
-x1=x[x<=S_change]
-x2=x[x>=S_change]
+x1 = x[x <= S_change]
+x2 = x[x >= S_change]
 
 fig.add_trace(go.Scatter(x=x1,y=[calc_load(v) for v in x1],mode='lines',name="初期レート"))
 fig.add_trace(go.Scatter(x=x2,y=[calc_load(v) for v in x2],mode='lines',name="後半レート"))
@@ -135,69 +116,33 @@ fig.add_vline(x=S_change,line_color="red",line_dash="dash")
 fig.add_vline(x=S_susp,line_color="purple",line_dash="dash")
 fig.add_vline(x=S_max,line_color="black",line_dash="dash")
 
-fig.add_annotation(x=S_change,y=F_change,
-text=f"変化点<br>{S_change:.1f}mm<br>{F_change:.1f}{load_unit}",
-showarrow=True)
+fig.add_annotation(
+    x=S_change,
+    y=F_change,
+    text=f"変化点<br>{S_change:.1f}mm<br>{F_change:.1f}{load_unit}",
+    showarrow=True
+)
 
-fig.add_annotation(x=S_susp,y=F_susp,
-text=f"フルストローク<br>{S_susp:.1f}mm<br>{F_susp:.1f}{load_unit}",
-showarrow=True)
+fig.add_annotation(
+    x=S_susp,
+    y=F_susp,
+    text=f"フルストローク<br>{S_susp:.1f}mm<br>{F_susp:.1f}{load_unit}",
+    showarrow=True
+)
 
-fig.update_layout(template="simple_white",
-xaxis_title="ストローク (mm)",
-yaxis_title=f"荷重 ({load_unit})")
+fig.update_layout(
+    template="simple_white",
+    xaxis_title="ストローク (mm)",
+    yaxis_title=f"荷重 ({load_unit})"
+)
 
 st.plotly_chart(fig,use_container_width=True)
-
-st.subheader("結果画像保存（スマホ用）")
-
-if kaleido_available:
-
-    graph_img=pio.to_image(fig,format="png",width=1000,height=500)
-    graph=Image.open(io.BytesIO(graph_img))
-
-    img=Image.new("RGB",(1000,900),"white")
-    draw=ImageDraw.Draw(img)
-
-    draw.text((40,20),"タミケンバーン バネレートツール",fill="black")
-
-    text=f"""
-スプリング名 : {spring_name}
-
-初期レート : {k_initial:.2f} {unit}
-後半レート : {k_late:.2f} {unit}
-
-変化ポイント : {S_change:.1f} mm
-プリロード : {P:.1f} mm
-"""
-
-    draw.text((40,80),text,fill="black")
-
-    img.paste(graph,(0,300))
-
-    buf=io.BytesIO()
-    img.save(buf,format="PNG")
-
-    st.download_button("結果画像を保存",buf.getvalue(),"spring_analysis.png")
-
-else:
-
-    st.caption("""
-PCでは画像保存はスクリーンショットをご利用ください。
-
-画像保存ボタンを使用するには下記追加ソフトが必要です。
-
-① Windowsの検索で「PowerShell」を開く  
-② 以下を入力してEnter  
-
-pip install kaleido
-""")
 
 st.divider()
 
 st.subheader("次のシミュレーター")
 
-col_a,col_b=st.columns(2)
+col_a,col_b = st.columns(2)
 
 with col_a:
     st.button("▶ ばねカットシミュレーター（準備中）")
