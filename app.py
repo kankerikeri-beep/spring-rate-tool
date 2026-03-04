@@ -169,19 +169,8 @@ fig.add_vline(x=S_change,line_color="red",line_dash="dash")
 fig.add_vline(x=S_susp,line_color="purple",line_dash="dash")
 fig.add_vline(x=S_max,line_color="black",line_dash="dash")
 
-fig.add_annotation(
-x=S_change,
-y=F_change,
-text=f"変化点 {S_change:.1f}mm\n{F_change:.0f}{load_unit}",
-showarrow=True
-)
-
-fig.add_annotation(
-x=S_susp,
-y=F_susp,
-text=f"フルストローク {S_susp:.1f}mm\n{F_susp:.0f}{load_unit}",
-showarrow=True
-)
+fig.add_annotation(x=S_change,y=F_change,text=f"変化点 {S_change:.1f}mm\n{F_change:.0f}{load_unit}",showarrow=True)
+fig.add_annotation(x=S_susp,y=F_susp,text=f"フルストローク {S_susp:.1f}mm\n{F_susp:.0f}{load_unit}",showarrow=True)
 
 fig.update_layout(
 template="simple_white",
@@ -193,7 +182,20 @@ st.plotly_chart(fig,use_container_width=True)
 
 st.caption("青：初期 / オレンジ：後半 / 赤：変化点 / 紫：フルストローク / 黒：線間密着")
 
-st.subheader("スクリーンショット保存")
+st.subheader("結果画像保存（スマホ用）")
+
+st.caption("""
+PCでは画像保存はスクリーンショットをご利用ください。
+
+画像保存ボタンを使用するには下記追加ソフトが必要です。
+
+① Windowsの検索で「PowerShell」を開く  
+② 以下を入力してEnter  
+
+pip install kaleido  
+
+これで画像保存機能が使用できます。
+""")
 
 try:
 
@@ -230,17 +232,7 @@ try:
     )
 
 except:
-
-    st.warning("""
-画像保存機能を使用するには追加ソフトが必要です。
-
-① Windowsの検索で「PowerShell」を開く
-② 以下を入力してEnter
-
-pip install kaleido
-
-これで画像保存機能が使用できます。
-""")
+    pass
 
 st.divider()
 st.subheader("次のシミュレーター")
