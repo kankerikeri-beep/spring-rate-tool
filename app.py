@@ -1,12 +1,10 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import plotly.io as pio
 import io
 from PIL import Image, ImageDraw
 
-# =========================================================
-# HEADER（凍結）
-# =========================================================
 st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wide")
 
 st.title("ばねレート簡易判定ツール")
@@ -19,25 +17,18 @@ st.divider()
 spring_name = st.text_input("スプリング名（スクショ用）", "JC92")
 
 unit = st.radio("表示単位", ["N/mm", "kgf/mm"], horizontal=True)
-
 load_unit = "N" if unit == "N/mm" else "kgf"
 
-# =========================================================
-# INPUT
-# =========================================================
 st.header("① 基本寸法")
 d = st.number_input("線径 d [mm]", 0.0, value=3.8, step=0.1)
 Do = st.number_input("外径 Do [mm]", 0.0, value=25.3, step=0.1)
 L_free = st.number_input("自由長 L_free [mm]", 0.0, value=365.0, step=0.1)
 
-st.header("② 巻数")
-N_dense = st.number_input("密巻き数", 0.0, value=35.0, step=0.1)
-N_coarse = st.number_input("荒巻き数", 0.0, value=21.5, step=0.1)
+st.header("② 有効巻き数")
+N_dense = st.number_input("密巻 有効巻き数", 0.0, value=35.0, step=0.1)
+N_coarse = st.number_input("荒巻 有効巻き数", 0.0, value=21.5, step=0.1)
 P = st.number_input("プリロード [mm]", 0.0, value=0.0, step=0.1)
 
-# =========================================================
-# 構造補足
-# =========================================================
 st.header("③ 構造補足")
 L_dense_free = st.number_input("密巻自由長 [mm]", 0.0, value=204.0, step=0.1)
 seat_dense = st.number_input("座巻厚（密巻側）[mm]", 0.0, value=3.5, step=0.1)
@@ -46,9 +37,6 @@ S_susp = st.number_input("サスペンション最大ストローク量 [mm]", 0
 
 if st.button("計算開始"):
 
-    # =========================================================
-    # PHYSICS
-    # =========================================================
     G = 78500
     Dm = Do - d
 
@@ -97,23 +85,15 @@ if st.button("計算開始"):
     F_change = calc_load(S_change)
     F_susp = calc_load(min(S_susp, S_max))
 
-    # =========================================================
-    # 線間距離
-    # =========================================================
     gap_dense = ((L_dense_free - seat_dense) / N_dense - d) if N_dense > 0 else None
-
     gap_coarse = (((L_free - L_dense_free) - seat_coarse) / N_coarse - d) if N_coarse > 0 else None
 
-    # =========================================================
-    # RESULT
-    # =========================================================
     st.divider()
     st.header("④ 測定結果")
 
     col1, col2 = st.columns(2)
 
     with col1:
-
         st.metric("初期レート", f"{k_initial:.2f} {unit}")
         st.metric("変化ポイント位置", f"{S_change:.1f} mm")
         st.metric("フルストローク量", f"{S_susp:.1f} mm")
@@ -122,7 +102,6 @@ if st.button("計算開始"):
             st.metric("密巻線間距離", f"{gap_dense:.2f} mm")
 
     with col2:
-
         st.metric("後半レート", f"{k_late:.2f} {unit}")
         st.metric("変化ポイント荷重", f"{F_change:.1f} {load_unit}")
         st.metric("フルストローク時の荷重", f"{F_susp:.1f} {load_unit}")
@@ -132,9 +111,6 @@ if st.button("計算開始"):
 
     st.metric("線間密着位置", f"{S_max:.1f} mm")
 
-    # =========================================================
-    # GRAPH
-    # =========================================================
     x = np.linspace(0, S_max, 400)
 
     fig = go.Figure()
@@ -144,83 +120,44 @@ if st.button("計算開始"):
         x1 = x[x <= S_change]
         x2 = x[x >= S_change]
 
-        fig.add_trace(go.Scatter(
-            x=x1,
-            y=[calc_load(v) for v in x1],
-            mode='lines',
-            line=dict(color='blue'),
-            name=f'初期 {k_initial:.2f}'
-        ))
+        fig.add_trace(go.Scatter(x=x1,y=[calc_load(v) for v in x1],mode='lines',line=dict(color='blue',width=5)))
+        fig.add_trace(go.Scatter(x=x2,y=[calc_load(v) for v in x2],mode='lines',line=dict(color='orange',width=5)))
 
-        fig.add_trace(go.Scatter(
-            x=x2,
-            y=[calc_load(v) for v in x2],
-            mode='lines',
-            line=dict(color='orange'),
-            name=f'後半 {k_late:.2f}'
-        ))
+    fig.add_vline(x=S_change, line_color="red", line_dash="dash", line_width=3)
+    fig.add_vline(x=S_susp, line_color="purple", line_dash="dash", line_width=3)
+    fig.add_vline(x=S_max, line_color="black", line_dash="dash", line_width=3)
 
-    else:
-
-        fig.add_trace(go.Scatter(
-            x=x,
-            y=[calc_load(v) for v in x],
-            mode='lines',
-            line=dict(color='blue'),
-            name=f'レート {k_initial:.2f}'
-        ))
-
-    fig.add_vline(x=S_change, line_color="red", line_dash="dash")
-    fig.add_vline(x=S_susp, line_color="purple", line_dash="dash")
-    fig.add_vline(x=S_max, line_color="black", line_dash="dash")
-
-    fig.add_annotation(
-        x=S_change,
-        y=F_change,
-        text=f"変化点<br>{S_change:.1f} mm<br>{F_change:.1f} {load_unit}",
-        showarrow=True,
-        font=dict(size=15)
-    )
-
-    fig.add_annotation(
-        x=S_susp,
-        y=F_susp,
-        text=f"フルストローク<br>{S_susp:.1f} mm<br>{F_susp:.1f} {load_unit}",
-        showarrow=True,
-        font=dict(size=15)
-    )
-
-    fig.update_layout(
-        template="simple_white",
-        xaxis_title="ストローク (mm)",
-        yaxis_title=f"荷重 ({load_unit})",
-        font=dict(size=15)
-    )
+    fig.update_layout(template="simple_white",
+                      xaxis_title="ストローク (mm)",
+                      yaxis_title=f"荷重 ({load_unit})",
+                      plot_bgcolor="white",
+                      paper_bgcolor="white")
 
     st.plotly_chart(fig, use_container_width=True)
 
     st.caption("青：初期 / オレンジ：後半 / 赤：変化点 / 紫：フルストローク / 黒：線間密着")
 
-    # =========================================================
-    # スクショ画像生成
-    # =========================================================
-    img = Image.new("RGB", (1200, 600), "white")
+    graph_img = pio.to_image(fig, format="png", width=1000, height=500)
+    graph = Image.open(io.BytesIO(graph_img))
+
+    img = Image.new("RGB", (1000, 900), "white")
     draw = ImageDraw.Draw(img)
 
+    draw.text((40,20),"タミケンバーン バネレートツール",fill="black")
+
     text = f"""
-Spring : {spring_name}
+スプリング名 : {spring_name}
 
-Initial Rate : {k_initial:.2f} {unit}
-Late Rate : {k_late:.2f} {unit}
+初期レート : {k_initial:.2f} {unit}
+後半レート : {k_late:.2f} {unit}
 
-Change Point : {S_change:.1f} mm
-Load : {F_change:.1f} {load_unit}
-
-Full Stroke : {S_susp:.1f} mm
-Load : {F_susp:.1f} {load_unit}
+変化ポイント : {S_change:.1f} mm
+プリロード : {P:.1f} mm
 """
 
-    draw.text((40,40), text, fill="black")
+    draw.text((40,80), text, fill="black")
+
+    img.paste(graph,(0,300))
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
@@ -232,9 +169,6 @@ Load : {F_susp:.1f} {load_unit}
         mime="image/png"
     )
 
-# =========================================================
-# FOOTER
-# =========================================================
 st.divider()
 st.subheader("次のシミュレーター")
 
