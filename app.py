@@ -8,8 +8,12 @@ import importlib
 
 st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wide")
 
+# kaleido存在確認
 kaleido_available = importlib.util.find_spec("kaleido") is not None
 
+# =========================
+# ヘッダ
+# =========================
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
 st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
@@ -20,15 +24,24 @@ st.divider()
 
 spring_name = st.text_input("スプリング名（スクショ用）", "JC92")
 
+# =========================
+# 単位
+# =========================
 unit = st.radio("表示単位", ["N/mm", "kgf/mm"], horizontal=True)
 load_unit = "N" if unit == "N/mm" else "kgf"
 
+# =========================
+# 基本寸法
+# =========================
 st.header("① 基本寸法")
 
 d = st.number_input("線径 d [mm]",0.0,value=3.8,step=0.1)
 Do = st.number_input("外径 Do [mm]",0.0,value=25.3,step=0.1)
 L_free = st.number_input("自由長 L_free [mm]",0.0,value=365.0,step=0.1)
 
+# =========================
+# 巻き数
+# =========================
 st.header("② 有効巻き数")
 
 N_dense = st.number_input("密巻 有効巻き数",0.0,value=35.0,step=0.1)
@@ -36,6 +49,9 @@ N_coarse = st.number_input("荒巻 有効巻き数",0.0,value=21.5,step=0.1)
 
 P = st.number_input("プリロード [mm]",0.0,value=0.0,step=0.1)
 
+# =========================
+# 構造補足
+# =========================
 st.header("③ 構造補足")
 
 L_dense_free = st.number_input(
@@ -66,23 +82,24 @@ value=97.0,
 step=0.1
 )
 
+# =========================
+# 計算
+# =========================
 G = 78500
-Dm = Do-d
+Dm = Do - d
 
-solid_dense = d*N_dense
-L_solid_dense = solid_dense+seat_dense
-
+solid_dense = d * N_dense
+L_solid_dense = solid_dense + seat_dense
 L_solid_total = d*(N_dense+N_coarse)+seat_dense+seat_coarse
 
-S_max = max(0,L_free-L_solid_total)
+S_max = max(0, L_free - L_solid_total)
 
-is_single = (N_dense==0) or (N_coarse==0)
+is_single = (N_dense == 0) or (N_coarse == 0)
 
 if is_single:
 
-    N_effective = N_dense if N_coarse==0 else N_coarse
+    N_effective = N_dense if N_coarse == 0 else N_coarse
     k_initial = (G*d**4)/(8*Dm**3*N_effective)
-
     k_late = k_initial
     S_change = 0
 
@@ -105,28 +122,30 @@ F_change = k_initial*(P+S_change)
 
 def calc_load(x):
 
-    x_real = P+x
+    x_real = P + x
 
     if is_single:
         return k_initial*x_real
 
-    if x<=S_change:
+    if x <= S_change:
         return k_initial*x_real
 
-    return F_change+k_late*(x-S_change)
+    return F_change + k_late*(x-S_change)
 
 F_susp = calc_load(min(S_susp,S_max))
 
 gap_dense = (L_dense_free/N_dense)-d if N_dense>0 else None
 gap_coarse = ((L_free-L_dense_free)/N_coarse)-d if N_coarse>0 else None
 
+# =========================
+# 結果
+# =========================
 st.divider()
 st.header("④ 測定結果")
 
 col1,col2 = st.columns(2)
 
 with col1:
-
     st.metric("初期レート",f"{k_initial:.2f} {unit}")
     st.metric("変化ポイント位置",f"{S_change:.1f} mm")
     st.metric("フルストローク量",f"{S_susp:.1f} mm")
@@ -135,7 +154,6 @@ with col1:
         st.metric("密巻線間距離",f"{gap_dense:.2f} mm")
 
 with col2:
-
     st.metric("後半レート",f"{k_late:.2f} {unit}")
     st.metric("変化ポイント荷重",f"{F_change:.1f} {load_unit}")
     st.metric("フルストローク時の荷重",f"{F_susp:.1f} {load_unit}")
@@ -145,6 +163,9 @@ with col2:
 
 st.metric("線間密着位置",f"{S_max:.1f} mm")
 
+# =========================
+# グラフ
+# =========================
 x = np.linspace(0,S_max,400)
 
 fig = go.Figure()
@@ -170,11 +191,16 @@ st.plotly_chart(fig,use_container_width=True)
 
 st.caption("青：初期 / オレンジ：後半 / 赤：変化点 / 紫：フルストローク / 黒：線間密着")
 
+# =========================
+# 保存
+# =========================
 st.subheader("結果画像保存（スマホ用）")
 
-if kaleido_available:
+save = st.button("結果画像を保存")
 
-    if st.button("結果画像を保存"):
+if save:
+
+    if kaleido_available:
 
         graph_img = pio.to_image(fig,format="png",width=1000,height=500)
         graph = Image.open(io.BytesIO(graph_img))
@@ -203,9 +229,9 @@ if kaleido_available:
 
         st.download_button("画像ダウンロード",buf.getvalue(),"spring_analysis.png")
 
-else:
+    else:
 
-    st.caption("""
+        st.warning("""
 PCでは画像保存はスクリーンショットをご利用ください。
 
 画像保存ボタンを使用するには下記追加ソフトが必要です。
@@ -213,9 +239,7 @@ PCでは画像保存はスクリーンショットをご利用ください。
 ① Windowsの検索で「PowerShell」を開く  
 ② 以下を入力してEnter  
 
-pip install kaleido  
-
-これで画像保存機能が使用できます。
+pip install kaleido
 """)
 
 st.divider()
