@@ -16,6 +16,9 @@ st.divider()
 
 unit = st.radio("表示単位", ["N/mm", "kgf/mm"], horizontal=True)
 
+# 荷重単位
+load_unit = "N" if unit == "N/mm" else "kgf"
+
 # =========================================================
 # INPUT（凍結）
 # =========================================================
@@ -76,7 +79,6 @@ if st.button("計算開始"):
     F_change = calc_load(S_change)
     F_susp = calc_load(min(S_susp, S_max))
 
-    # 線間距離
     gap_dense = ((L_dense_free - seat_dense) / N_dense - d) if N_dense > 0 else None
     gap_coarse = (((L_free - L_dense_free) - seat_coarse) / N_coarse - d) if N_coarse > 0 else None
 
@@ -97,15 +99,15 @@ if st.button("計算開始"):
 
     with col2:
         st.metric("後半レート", f"{k_late:.2f} {unit}")
-        st.metric("変化ポイント荷重", f"{F_change:.1f} {unit}")
-        st.metric("フルストローク時の荷重", f"{F_susp:.1f} {unit}")
+        st.metric("変化ポイント荷重", f"{F_change:.1f} {load_unit}")
+        st.metric("フルストローク時の荷重", f"{F_susp:.1f} {load_unit}")
         if gap_coarse is not None:
             st.metric("荒巻線間距離", f"{gap_coarse:.2f} mm")
 
     st.metric("線間密着位置", f"{S_max:.1f} mm")
 
     # =========================================================
-    # GRAPH（凍結構造）
+    # GRAPH
     # =========================================================
     x = np.linspace(0, S_max, 400)
     fig = go.Figure()
@@ -146,7 +148,7 @@ if st.button("計算開始"):
     fig.add_annotation(
         x=S_change,
         y=F_change,
-        text=f"変化点<br>{S_change:.1f} mm<br>{F_change:.1f} {unit}",
+        text=f"変化点<br>{S_change:.1f} mm<br>{F_change:.1f} {load_unit}",
         showarrow=True,
         font=dict(size=15)
     )
@@ -154,7 +156,7 @@ if st.button("計算開始"):
     fig.add_annotation(
         x=S_susp,
         y=F_susp,
-        text=f"フルストローク<br>{S_susp:.1f} mm<br>{F_susp:.1f} {unit}",
+        text=f"フルストローク<br>{S_susp:.1f} mm<br>{F_susp:.1f} {load_unit}",
         showarrow=True,
         font=dict(size=15)
     )
@@ -162,7 +164,7 @@ if st.button("計算開始"):
     fig.update_layout(
         template="simple_white",
         xaxis_title="ストローク (mm)",
-        yaxis_title=f"荷重 ({unit})",
+        yaxis_title=f"荷重 ({load_unit})",
         font=dict(size=15)
     )
 
