@@ -12,12 +12,13 @@ st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連
 st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
 st.markdown("▶ 使用方法解説動画（YouTube）  \nhttps://www.youtube.com/")
+
 st.divider()
 
-spring_name = st.text_input("スプリング名（スクショ用）","JC92")
+spring_name = st.text_input("スプリング名（スクショ用）", "JC92")
 
-unit = st.radio("表示単位",["N/mm","kgf/mm"],horizontal=True)
-load_unit = "N" if unit=="N/mm" else "kgf"
+unit = st.radio("表示単位", ["N/mm", "kgf/mm"], horizontal=True)
+load_unit = "N" if unit == "N/mm" else "kgf"
 
 st.header("① 基本寸法")
 
@@ -63,91 +64,91 @@ step=0.1
 )
 
 G = 78500
-Dm = Do-d
+Dm = Do - d
 
-solid_dense = d*N_dense
-L_solid_dense = solid_dense+seat_dense
+solid_dense = d * N_dense
+L_solid_dense = solid_dense + seat_dense
 
-L_solid_total = d*(N_dense+N_coarse)+seat_dense+seat_coarse
+L_solid_total = d * (N_dense + N_coarse) + seat_dense + seat_coarse
 
-S_max = max(0,L_free-L_solid_total)
+S_max = max(0, L_free - L_solid_total)
 
-is_single = (N_dense==0) or (N_coarse==0)
+is_single = (N_dense == 0) or (N_coarse == 0)
 
 if is_single:
 
-    N_effective = N_dense if N_coarse==0 else N_coarse
+    N_effective = N_dense if N_coarse == 0 else N_coarse
 
-    k_initial = (G*d**4)/(8*Dm**3*N_effective)
+    k_initial = (G * d**4) / (8 * Dm**3 * N_effective)
 
     k_late = k_initial
     S_change = 0
 
 else:
 
-    k_dense = (G*d**4)/(8*Dm**3*N_dense)
-    k_coarse = (G*d**4)/(8*Dm**3*N_coarse)
+    k_dense = (G * d**4) / (8 * Dm**3 * N_dense)
+    k_coarse = (G * d**4) / (8 * Dm**3 * N_coarse)
 
-    k_initial = 1/((1/k_dense)+(1/k_coarse))
+    k_initial = 1 / ((1 / k_dense) + (1 / k_coarse))
     k_late = k_coarse
 
-    S_change = max(0,L_dense_free-L_solid_dense-P)
+    S_change = max(0, L_dense_free - L_solid_dense - P)
 
-if unit=="kgf/mm":
+if unit == "kgf/mm":
 
-    k_initial/=9.80665
-    k_late/=9.80665
+    k_initial /= 9.80665
+    k_late /= 9.80665
 
-F_change = k_initial*(P+S_change)
+F_change = k_initial * (P + S_change)
 
 def calc_load(x):
 
-    x_real = P+x
+    x_real = P + x
 
     if is_single:
-        return k_initial*x_real
+        return k_initial * x_real
 
-    if x<=S_change:
-        return k_initial*x_real
+    if x <= S_change:
+        return k_initial * x_real
 
-    return F_change+k_late*(x-S_change)
+    return F_change + k_late * (x - S_change)
 
-F_susp = calc_load(min(S_susp,S_max))
+F_susp = calc_load(min(S_susp, S_max))
 
-gap_dense = (L_dense_free/N_dense)-d if N_dense>0 else None
-gap_coarse = ((L_free-L_dense_free)/N_coarse)-d if N_coarse>0 else None
+gap_dense = (L_dense_free / N_dense) - d if N_dense > 0 else None
+gap_coarse = ((L_free - L_dense_free) / N_coarse) - d if N_coarse > 0 else None
 
 st.divider()
 st.header("④ 測定結果")
 
-col1,col2 = st.columns(2)
+col1, col2 = st.columns(2)
 
 with col1:
 
-    st.metric("初期レート",f"{k_initial:.2f} {unit}")
-    st.metric("変化ポイント位置",f"{S_change:.1f} mm")
-    st.metric("フルストローク量",f"{S_susp:.1f} mm")
+    st.metric("初期レート", f"{k_initial:.2f} {unit}")
+    st.metric("変化ポイント位置", f"{S_change:.1f} mm")
+    st.metric("フルストローク量", f"{S_susp:.1f} mm")
 
     if gap_dense is not None:
-        st.metric("密巻線間距離",f"{gap_dense:.2f} mm")
+        st.metric("密巻線間距離", f"{gap_dense:.2f} mm")
 
 with col2:
 
-    st.metric("後半レート",f"{k_late:.2f} {unit}")
-    st.metric("変化ポイント荷重",f"{F_change:.1f} {load_unit}")
-    st.metric("フルストローク時の荷重",f"{F_susp:.1f} {load_unit}")
+    st.metric("後半レート", f"{k_late:.2f} {unit}")
+    st.metric("変化ポイント荷重", f"{F_change:.1f} {load_unit}")
+    st.metric("フルストローク時の荷重", f"{F_susp:.1f} {load_unit}")
 
     if gap_coarse is not None:
-        st.metric("荒巻線間距離",f"{gap_coarse:.2f} mm")
+        st.metric("荒巻線間距離", f"{gap_coarse:.2f} mm")
 
-st.metric("線間密着位置",f"{S_max:.1f} mm")
+st.metric("線間密着位置", f"{S_max:.1f} mm")
 
-x = np.linspace(0,S_max,400)
+x = np.linspace(0, S_max, 400)
 
 fig = go.Figure()
 
-x1 = x[x<=S_change]
-x2 = x[x>=S_change]
+x1 = x[x <= S_change]
+x2 = x[x >= S_change]
 
 fig.add_trace(go.Scatter(
 x=x1,
@@ -169,8 +170,19 @@ fig.add_vline(x=S_change,line_color="red",line_dash="dash")
 fig.add_vline(x=S_susp,line_color="purple",line_dash="dash")
 fig.add_vline(x=S_max,line_color="black",line_dash="dash")
 
-fig.add_annotation(x=S_change,y=F_change,text=f"変化点 {S_change:.1f}mm\n{F_change:.0f}{load_unit}",showarrow=True)
-fig.add_annotation(x=S_susp,y=F_susp,text=f"フルストローク {S_susp:.1f}mm\n{F_susp:.0f}{load_unit}",showarrow=True)
+fig.add_annotation(
+x=S_change,
+y=F_change,
+text=f"変化点 {S_change:.1f}mm\n{F_change:.0f}{load_unit}",
+showarrow=True
+)
+
+fig.add_annotation(
+x=S_susp,
+y=F_susp,
+text=f"フルストローク {S_susp:.1f}mm\n{F_susp:.0f}{load_unit}",
+showarrow=True
+)
 
 fig.update_layout(
 template="simple_white",
@@ -197,17 +209,21 @@ pip install kaleido
 これで画像保存機能が使用できます。
 """)
 
-try:
+save_button = st.button("結果画像を生成")
 
-    graph_img = pio.to_image(fig,format="png",width=1000,height=500)
-    graph = Image.open(io.BytesIO(graph_img))
+if save_button:
 
-    img = Image.new("RGB",(1000,900),"white")
-    draw = ImageDraw.Draw(img)
+    try:
 
-    draw.text((40,20),"タミケンバーン バネレートツール",fill="black")
+        graph_img = pio.to_image(fig,format="png",width=1000,height=500)
+        graph = Image.open(io.BytesIO(graph_img))
 
-    text=f"""
+        img = Image.new("RGB",(1000,900),"white")
+        draw = ImageDraw.Draw(img)
+
+        draw.text((40,20),"タミケンバーン バネレートツール",fill="black")
+
+        text=f"""
 スプリング名 : {spring_name}
 
 初期レート : {k_initial:.2f} {unit}
@@ -217,24 +233,25 @@ try:
 プリロード : {P:.1f} mm
 """
 
-    draw.text((40,80),text,fill="black")
+        draw.text((40,80),text,fill="black")
 
-    img.paste(graph,(0,300))
+        img.paste(graph,(0,300))
 
-    buf=io.BytesIO()
-    img.save(buf,format="PNG")
+        buf=io.BytesIO()
+        img.save(buf,format="PNG")
 
-    st.download_button(
-    label="結果画像を保存",
-    data=buf.getvalue(),
-    file_name="spring_analysis.png",
-    mime="image/png"
-    )
+        st.download_button(
+        label="画像ダウンロード",
+        data=buf.getvalue(),
+        file_name="spring_analysis.png",
+        mime="image/png"
+        )
 
-except:
-    pass
+    except:
+        st.warning("kaleidoがインストールされていないため画像生成できません")
 
 st.divider()
+
 st.subheader("次のシミュレーター")
 
 col_a,col_b=st.columns(2)
