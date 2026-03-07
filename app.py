@@ -23,7 +23,6 @@ with col_in1:
     st.header("① 基本寸法")
     d = st.number_input("線径 d [mm]", 0.0, value=3.8, step=0.1)
     Do = st.number_input("外径 Do [mm]", 0.0, value=25.3, step=0.1)
-    P = st.number_input("プリロード [mm]", 0.0, value=27.0, step=1.0)
 
 with col_in2:
     st.header("② 有効巻き数")
@@ -33,12 +32,14 @@ with col_in2:
 st.header("③ 構造補足")
 col_in3, col_in4 = st.columns(2)
 with col_in3:
-    # 移動・並び替え
+    # 指定の順番通りに配置
     L_free = st.number_input("自由長 L_free [mm]", 0.0, value=365.0, step=0.1)
     L_dense_free = st.number_input("密巻自由長（座巻含む実測）[mm]", 0.0, value=204.0, step=0.1)
     seat_dense = st.number_input("座巻厚（密巻側）[mm]", 0.0, value=3.5, step=0.1)
+
 with col_in4:
     seat_coarse = st.number_input("座巻厚（荒巻側）[mm]", 0.0, value=3.0, step=0.1)
+    P = st.number_input("プリロード [mm]", 0.0, value=27.0, step=1.0)
     S_susp = st.number_input("サスペンション最大ストローク量 [mm]", 0.0, value=97.0, step=1.0)
 
 # --- 物理計算セクション ---
@@ -89,7 +90,7 @@ with col_res2:
     st.metric(f"後半レート ({unit})", f"{to_disp(k_late, True):.3f}")
     st.metric(f"変化ポイント荷重 ({load_unit})", f"{to_disp(F_change_n):.1f}")
 
-# 下部にまとめる項目
+# 下部まとめ項目
 F_susp_disp = to_disp(calc_load_n(min(S_susp, S_max_stroke)))
 st.metric(f"最大ストローク荷重 ({load_unit})", f"{F_susp_disp:.1f}")
 st.metric("線間密着限界 (mm)", f"{S_max_stroke:.1f}")
@@ -134,7 +135,7 @@ fig.add_annotation(
 )
 
 fig.update_layout(template="simple_white", xaxis_title="ストローク量 (mm)", yaxis_title=f"荷重 ({load_unit})", height=600)
-st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v23")
+st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v24")
 
 # --- 予告セクション ---
 st.divider()
