@@ -176,9 +176,9 @@ fig.update_layout(template="simple_white", xaxis_title="ストローク (mm)", y
 st.plotly_chart(fig, use_container_width=True)
 st.caption("青：初期 / オレンジ：後半 / 赤：変化点 / 紫：フルストローク / 黒：線間密着")
 
-st.divider()
-st.subheader("次のシミュレーター")
-col_a, col_b = st.columns(2)
-with col_a: st.button("▶ リアサスリンクシミュレーター（準備中）")
-with col_b: st.button("▶ エアばね・油面調整シミュレーター（準備中）")
-with col_b: st.button("▶ エアばね・油面調整シミュレーター（準備中）")
+# --- 予告セクション (エラー修正済み) ---
+st.write("---")
+st.subheader("次のシミュレーター（予告）")
+ca, cb = st.columns(2)
+with ca: st.button("▶ リアサスリンクシミュレーター（準備中）", key="f_link")
+with cb: st.button("▶ エアバネ・油面調整シミュレーター（準備中）", key="f_air")
