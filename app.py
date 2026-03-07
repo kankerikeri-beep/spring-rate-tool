@@ -23,52 +23,47 @@ with col_in1:
     st.header("① 基本寸法")
     d = st.number_input("線径 d [mm]", 0.0, value=3.8, step=0.1)
     Do = st.number_input("外径 Do [mm]", 0.0, value=25.3, step=0.1)
-    L_free = st.number_input("自由長 L_free [mm]", 0.0, value=365.0, step=0.1)
     P = st.number_input("プリロード [mm]", 0.0, value=27.0, step=1.0)
 
 with col_in2:
     st.header("② 有効巻き数")
     N_dense = st.number_input("密巻 有効巻き数", 0.0, value=35.0, step=0.1)
     N_coarse = st.number_input("荒巻 有効巻き数", 0.0, value=21.5, step=0.1)
-    S_susp = st.number_input("サスペンション最大ストローク量 [mm]", 0.0, value=97.0, step=1.0)
 
 st.header("③ 構造補足")
 col_in3, col_in4 = st.columns(2)
 with col_in3:
+    # 移動・並び替え
+    L_free = st.number_input("自由長 L_free [mm]", 0.0, value=365.0, step=0.1)
     L_dense_free = st.number_input("密巻自由長（座巻含む実測）[mm]", 0.0, value=204.0, step=0.1)
     seat_dense = st.number_input("座巻厚（密巻側）[mm]", 0.0, value=3.5, step=0.1)
 with col_in4:
     seat_coarse = st.number_input("座巻厚（荒巻側）[mm]", 0.0, value=3.0, step=0.1)
+    S_susp = st.number_input("サスペンション最大ストローク量 [mm]", 0.0, value=97.0, step=1.0)
 
 # --- 物理計算セクション ---
 G_val = 78500
 Dm = Do - d
 
-# 単体レート算出 (N/mm)
 k_dense = (G_val * d**4) / (8 * Dm**3 * N_dense) if N_dense > 0 else 1e10
 k_coarse = (G_val * d**4) / (8 * Dm**3 * N_coarse) if N_coarse > 0 else 1e10
 
-# 合成・後半レート
 k_initial = 1 / ((1 / k_dense) + (1 / k_coarse))
 k_late = k_coarse
 
-# 変化点の算出
 L_solid_dense = (N_dense * d) + seat_dense
 max_delta_dense = max(0.0, L_dense_free - L_solid_dense)
 total_delta_at_change = max_delta_dense + (k_dense * max_delta_dense) / k_coarse
 S_change = max(0.0, total_delta_at_change - P)
 F_change_n = k_initial * total_delta_at_change
 
-# 密着限界の算出
 L_solid_total = (N_dense + N_coarse) * d + seat_dense + seat_coarse
 S_max_total = max(0.0, L_free - L_solid_total)
 S_max_stroke = max(0.0, S_max_total - P)
 
-# 線間隙間の算出
 gap_dense = ((L_dense_free - seat_dense) / N_dense) - d if N_dense > 0 else 0
 gap_coarse = (((L_free - L_dense_free) - seat_coarse) / N_coarse) - d if N_coarse > 0 else 0
 
-# --- 表示用計算関数 ---
 def calc_load_n(x):
     x_total = P + x
     if (N_dense == 0 or N_coarse == 0) or x_total <= total_delta_at_change:
@@ -80,26 +75,30 @@ def to_disp(val_n, is_rate=False):
         return val_n / 9.80665
     return val_n
 
-# --- ④ 判定結果 ---
+# --- ④ 算出結果 ---
 st.divider()
-st.header("④ 判定結果")
+st.header("④ 算出結果")
 
 col_res1, col_res2 = st.columns(2)
 
 with col_res1:
     st.metric(f"初期レート ({unit})", f"{to_disp(k_initial, True):.3f}")
     st.metric("変化ポイント位置 (mm)", f"{S_change:.1f}")
-    st.metric("密巻部 線間隙間 (mm)", f"{max(0.0, gap_dense):.2f}")
-    st.metric("サスペンション最大ストローク量 (mm)", f"{S_susp:.1f}")
 
 with col_res2:
     st.metric(f"後半レート ({unit})", f"{to_disp(k_late, True):.3f}")
     st.metric(f"変化ポイント荷重 ({load_unit})", f"{to_disp(F_change_n):.1f}")
-    st.metric("荒巻部 線間隙間 (mm)", f"{max(0.0, gap_coarse):.2f}")
-    F_susp_disp = to_disp(calc_load_n(min(S_susp, S_max_stroke)))
-    st.metric(f"最大ストローク荷重 ({load_unit})", f"{F_susp_disp:.1f}")
 
-st.metric("物理的 線間密着限界 (mm)", f"{S_max_stroke:.1f}")
+# 下部にまとめる項目
+F_susp_disp = to_disp(calc_load_n(min(S_susp, S_max_stroke)))
+st.metric(f"最大ストローク荷重 ({load_unit})", f"{F_susp_disp:.1f}")
+st.metric("線間密着限界 (mm)", f"{S_max_stroke:.1f}")
+
+col_gap1, col_gap2 = st.columns(2)
+with col_gap1:
+    st.metric("密巻部 線間隙間 (mm)", f"{max(0.0, gap_dense):.2f}")
+with col_gap2:
+    st.metric("荒巻部 線間隙間 (mm)", f"{max(0.0, gap_coarse):.2f}")
 
 # --- ⑤ グラフ描画 ---
 st.write("---")
@@ -123,7 +122,6 @@ fig.add_vline(x=S_change, line_dash="dash", line_color="red")
 fig.add_vline(x=S_susp, line_dash="dash", line_color="purple")
 fig.add_vline(x=S_max_stroke, line_dash="dash", line_color="black")
 
-# 数値アノテーション（復活）
 fig.add_annotation(
     x=S_change, y=to_disp(F_change_n),
     text=f"変化点 {S_change:.1f}mm\n{to_disp(F_change_n):.1f}{load_unit}",
@@ -136,7 +134,7 @@ fig.add_annotation(
 )
 
 fig.update_layout(template="simple_white", xaxis_title="ストローク量 (mm)", yaxis_title=f"荷重 ({load_unit})", height=600)
-st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_final")
+st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v23")
 
 # --- 予告セクション ---
 st.divider()
