@@ -2,22 +2,13 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="ばねレート簡易判定ツール v2.1", layout="wide")
+st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wide")
 
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
 st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
-# 案内文
-st.info("""
-YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツールです。
-異常値報告や数値共有は、YouTubeチャンネルの関連動画コメント欄までお願いいたします。
-""")
-
-st.markdown("""
-▶ [フロントフォークエアバネシミュレーターはこちら](https://kankerikeri-beep--fork-setting-sim-app-ndr7v8.streamlit.app/)  
-▶ [使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル）](https://www.youtube.com/@dogtamy-Lean-burn)
-""")
+st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://www.youtube.com/@dogtamy-Lean-burn")
 st.divider()
 
 # --- ① 入力セクション ---
@@ -66,7 +57,7 @@ L_solid_dense = (N_dense * d) + seat_dense
 max_delta_dense = max(0.0, L_dense_free - L_solid_dense)
 total_delta_at_change = max_delta_dense + (k_dense * max_delta_dense) / k_coarse
 S_change = max(0.0, total_delta_at_change - P)
-F_change = k_initial * total_delta_at_change
+F_change_n = k_initial * total_delta_at_change
 
 # 密着限界の算出
 L_solid_total = (N_dense + N_coarse) * d + seat_dense + seat_coarse
@@ -82,7 +73,7 @@ def calc_load_n(x):
     x_total = P + x
     if (N_dense == 0 or N_coarse == 0) or x_total <= total_delta_at_change:
         return k_initial * x_total
-    return F_change + k_late * (x_total - total_delta_at_change)
+    return F_change_n + k_late * (x_total - total_delta_at_change)
 
 def to_disp(val_n, is_rate=False):
     if unit == "kgf/mm":
@@ -99,14 +90,14 @@ with col_res1:
     st.metric(f"初期レート ({unit})", f"{to_disp(k_initial, True):.3f}")
     st.metric("変化ポイント位置 (mm)", f"{S_change:.1f}")
     st.metric("密巻部 線間隙間 (mm)", f"{max(0.0, gap_dense):.2f}")
-    st.metric("最大ストローク (mm)", f"{S_susp:.1f}")
+    st.metric("サスペンション最大ストローク量 (mm)", f"{S_susp:.1f}")
 
 with col_res2:
     st.metric(f"後半レート ({unit})", f"{to_disp(k_late, True):.3f}")
-    st.metric(f"変化点荷重 ({load_unit})", f"{to_disp(F_change):.1f}")
+    st.metric(f"変化ポイント荷重 ({load_unit})", f"{to_disp(F_change_n):.1f}")
     st.metric("荒巻部 線間隙間 (mm)", f"{max(0.0, gap_coarse):.2f}")
     F_susp_disp = to_disp(calc_load_n(min(S_susp, S_max_stroke)))
-    st.metric(f"フル制動時荷重 ({load_unit})", f"{F_susp_disp:.1f}")
+    st.metric(f"最大ストローク荷重 ({load_unit})", f"{F_susp_disp:.1f}")
 
 st.metric("物理的 線間密着限界 (mm)", f"{S_max_stroke:.1f}")
 
@@ -128,12 +119,24 @@ if len(x2) > 0:
         y2 = np.insert(y2, 0, y1[-1])
     fig.add_trace(go.Scatter(x=x2, y=y2, name="後半レート区間", line=dict(color='orange', width=5)))
 
-fig.add_vline(x=S_change, line_dash="dash", line_color="red", annotation_text="変化点")
-fig.add_vline(x=S_susp, line_dash="dash", line_color="purple", annotation_text="最大ストローク")
-fig.add_vline(x=S_max_stroke, line_dash="dash", line_color="black", annotation_text="密着限界")
+fig.add_vline(x=S_change, line_dash="dash", line_color="red")
+fig.add_vline(x=S_susp, line_dash="dash", line_color="purple")
+fig.add_vline(x=S_max_stroke, line_dash="dash", line_color="black")
+
+# 数値アノテーション（復活）
+fig.add_annotation(
+    x=S_change, y=to_disp(F_change_n),
+    text=f"変化点 {S_change:.1f}mm\n{to_disp(F_change_n):.1f}{load_unit}",
+    showarrow=True, arrowhead=2
+)
+fig.add_annotation(
+    x=S_susp, y=F_susp_disp,
+    text=f"最大ストローク {S_susp:.1f}mm\n{F_susp_disp:.1f}{load_unit}",
+    showarrow=True, arrowhead=2, ay=-40
+)
 
 fig.update_layout(template="simple_white", xaxis_title="ストローク量 (mm)", yaxis_title=f"荷重 ({load_unit})", height=600)
-st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v21")
+st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_final")
 
 # --- 予告セクション ---
 st.divider()
@@ -142,4 +145,4 @@ col_next1, col_next2 = st.columns(2)
 with col_next1:
     st.button("▶ リアサスリンクシミュレーター（準備中）", key="btn_rear_sim")
 with col_next2:
-    st.button("▶ フロントフォークエアバネシミュレーター（公開中）", key="btn_fork_sim")
+    st.button("▶ フロントフォークエアバネシミュレーター（準備中）", key="btn_fork_sim_pre")
