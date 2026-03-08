@@ -2,13 +2,14 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="ばねレート簡易判定ツール", layout="wide")
+st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
 
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
 st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
-st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://www.youtube.com/@dogtamy-Lean-burn")
+# 指定のリンクを反映
+st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://youtu.be/rES0bE0S45Y")
 st.divider()
 
 # --- ① 入力セクション ---
@@ -135,7 +136,7 @@ fig.add_annotation(
 )
 
 fig.update_layout(template="simple_white", xaxis_title="ストローク量 (mm)", yaxis_title=f"荷重 ({load_unit})", height=600)
-st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v24")
+st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v25")
 
 # --- 予告セクション ---
 st.divider()
