@@ -1,9 +1,9 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import streamlit.components.v1 as components  # ←これを追加
+import streamlit.components.v1 as components  # これを追加
 
-# --- Google Analytics タグをここに入れる ---
+# --- Google Analytics タグを設定 ---
 ga_code = """
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-N6J2MEPVXL"></script>
 <script>
@@ -13,14 +13,13 @@ ga_code = """
   gtag('config', 'G-N6J2MEPVXL');
 </script>
 """
-components.html(ga_code, height=0) # ←これでHTMLとして実行されます
-# ---------------------------------------
+components.html(ga_code, height=0)
+# ----------------------------------
 
 st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
+st.title("ばねレート簡易判定ツール")
 
-  gtag('config', 'G-N6J2MEPVXL');
-</script>
-st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
+# この後に昨日までの計算ロジックが続く...
 
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
