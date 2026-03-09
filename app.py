@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import streamlit.components.v1 as components  # これを追加
+import streamlit.components.v1 as components
 
 # --- Google Analytics タグを設定 ---
 ga_code = """
@@ -16,16 +16,15 @@ ga_code = """
 components.html(ga_code, height=0)
 # ----------------------------------
 
+# ページ設定
 st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
-st.title("ばねレート簡易判定ツール")
 
-# この後に昨日までの計算ロジックが続く...
-
+# タイトル（重複を削除し、1回のみ表示）
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
 st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
-# 指定のリンクを反映
+# 使用方法解説動画リンク
 st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://youtu.be/rES0bE0S45Y")
 st.divider()
 
@@ -50,7 +49,6 @@ with col_in2:
 st.header("③ 構造補足")
 col_in3, col_in4 = st.columns(2)
 with col_in3:
-    # 指定の順番通りに配置
     L_free = st.number_input("自由長 L_free [mm]", 0.0, value=365.0, step=0.1)
     L_dense_free = st.number_input("密巻自由長（座巻含む実測）[mm]", 0.0, value=204.0, step=0.1)
     seat_dense = st.number_input("座巻厚（密巻側）[mm]", 0.0, value=3.5, step=0.1)
@@ -162,4 +160,5 @@ col_next1, col_next2 = st.columns(2)
 with col_next1:
     st.button("▶ リアサスリンクシミュレーター（準備中）", key="btn_rear_sim")
 with col_next2:
-    st.button("▶ フロントフォークエアバネシミュレーター（準備中）", key="btn_fork_sim_pre")
+    # 既に公開されているフロントフォークシミュレーターへのリンクを想定
+    st.button("▶ フロントフォークエアバネシミュレーター（更新中）", key="btn_fork_sim_pre")
