@@ -1,7 +1,15 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N6J2MEPVXL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-N6J2MEPVXL');
+</script>
 st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
 
 st.title("ばねレート簡易判定ツール")
