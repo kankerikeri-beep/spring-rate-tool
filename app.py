@@ -3,7 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
 
-# --- Google Analytics タグを設定 ---
+# --- 1. まずGoogle Analyticsのコードを定義 ---
 ga_code = """
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-N6J2MEPVXL"></script>
 <script>
@@ -13,16 +13,17 @@ ga_code = """
   gtag('config', 'G-N6J2MEPVXL');
 </script>
 """
-components.html(ga_code, height=0)
-# ----------------------------------
 
-# ページ設定
+# --- 2. 次に実行する（この順番が大事！） ---
+components.html(ga_code, height=0)
+
+# --- 3. ページの設定 ---
 st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
 
-# タイトル（重複を削除し、1回のみ表示）
+# --- 4. タイトル表示（1回だけ！） ---
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
-st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
+st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")import streamlit as st
 
 # 使用方法解説動画リンク
 st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://youtu.be/rES0bE0S45Y")
