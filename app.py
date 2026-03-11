@@ -1,28 +1,36 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import streamlit.components.v1 as components
+import pathlib
 
 # --- 1. ページ設定（※絶対に一番最初に書く） ---
 st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
 
-# --- 2. Google Analytics 設定 ---
-ga_code = """
+# --- 2. Google Analytics 強制注入（Streamlit本体のHTMLを直接書き換える処理） ---
+GA_ID = "google_analytics"
+GA_SCRIPT = """
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-N6J2MEPVXL"></script>
-<script>
+<script id='google_analytics'>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  
-  // Streamlitの箱の中からでも認識できるようにタイトルを強制指定
-  gtag('config', 'G-N6J2MEPVXL', {
-    'page_title': 'ばねレート簡易判定ツール',
-    'page_path': '/'
-  });
+  gtag('config', 'G-N6J2MEPVXL');
 </script>
 """
-# ↓ここが「0」だとブラウザに無視されるため、必ず「1」にします
-components.html(ga_code, height=1)
+
+def inject_ga():
+    # Streamlitが裏で動かしている大元のHTMLファイルを探し出す
+    index_path = pathlib.Path(st.__file__).parent / "static" / "index.html"
+    try:
+        html = index_path.read_text(encoding='utf-8')
+        if GA_ID not in html:
+            # 大元のHTMLの<head>に、GAのコードを直接ねじ込む
+            new_html = html.replace('<head>', '<head>\n' + GA_SCRIPT)
+            index_path.write_text(new_html, encoding='utf-8')
+    except Exception as e:
+        pass
+
+inject_ga()
 
 # --- 3. タイトルと説明 ---
 st.title("ばねレート簡易判定ツール")
