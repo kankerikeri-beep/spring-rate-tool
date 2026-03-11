@@ -3,7 +3,10 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
 
-# --- 1. Google Analytics 設定 ---
+# --- 1. ページ設定（※絶対に一番最初に書く！） ---
+st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
+
+# --- 2. Google Analytics 設定 ---
 ga_code = """
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-N6J2MEPVXL"></script>
 <script>
@@ -15,15 +18,15 @@ ga_code = """
 """
 components.html(ga_code, height=0)
 
-# --- 2. ページ設定とタイトル ---
-st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
-
+# --- 3. タイトルと説明 ---
 st.title("ばねレート簡易判定ツール")
 st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
 st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
 st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://youtu.be/rES0bE0S45Y")
 st.divider()
+
+# （これ以降のコードは今のままでOKです！）
 
 # --- 3. 入力セクション ---
 spring_name = st.text_input("スプリング名（スクショ用）", "グロム/JC92")
