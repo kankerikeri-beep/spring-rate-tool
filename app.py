@@ -1,44 +1,19 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import pathlib
 
 # --- 1. ページ設定（※絶対に一番最初に書く） ---
 st.set_page_config(page_title="ばねレート簡易判定ツール v2.5", layout="wide")
 
-# --- 2. Google Analytics 強制注入（Streamlit本体のHTMLを直接書き換える処理） ---
-GA_ID = "google_analytics"
-GA_SCRIPT = """
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N6J2MEPVXL"></script>
-<script id='google_analytics'>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N6J2MEPVXL');
-</script>
-"""
-
-def inject_ga():
-    # Streamlitが裏で動かしている大元のHTMLファイルを探し出す
-    index_path = pathlib.Path(st.__file__).parent / "static" / "index.html"
-    try:
-        html = index_path.read_text(encoding='utf-8')
-        if GA_ID not in html:
-            # 大元のHTMLの<head>に、GAのコードを直接ねじ込む
-            new_html = html.replace('<head>', '<head>\n' + GA_SCRIPT)
-            index_path.write_text(new_html, encoding='utf-8')
-    except Exception as e:
-        pass
-
-inject_ga()
-
-# --- 3. タイトルと説明 ---
+# --- 2. タイトルと案内文 ---
 st.title("ばねレート簡易判定ツール")
+st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
+st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
 st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://youtu.be/rES0bE0S45Y")
 st.divider()
 
-# --- 4. 入力セクション ---
+# --- 3. 入力セクション ---
 spring_name = st.text_input("スプリング名（スクショ用）", "グロム/JC92")
 
 unit = st.radio("表示単位", ["kgf/mm", "N/mm"], horizontal=True)
@@ -68,7 +43,7 @@ with col_in4:
     P = st.number_input("プリロード [mm]", 0.0, value=27.0, step=1.0)
     S_susp = st.number_input("サスペンション最大ストローク量 [mm]", 0.0, value=97.0, step=1.0)
 
-# --- 5. 物理計算セクション ---
+# --- 4. 物理計算セクション ---
 G_val = 78500
 Dm = Do - d
 
@@ -102,7 +77,7 @@ def to_disp(val_n, is_rate=False):
         return val_n / 9.80665
     return val_n
 
-# --- 6. 算出結果 ---
+# --- 5. 算出結果 ---
 st.divider()
 st.header("④ 算出結果")
 
@@ -116,6 +91,7 @@ with col_res2:
     st.metric(f"後半レート ({unit})", f"{to_disp(k_late, True):.3f}")
     st.metric(f"変化ポイント荷重 ({load_unit})", f"{to_disp(F_change_n):.1f}")
 
+# 「最大ストローク荷重」の名称を維持
 F_susp_disp = to_disp(calc_load_n(min(S_susp, S_max_stroke)))
 st.metric(f"最大ストローク荷重 ({load_unit})", f"{F_susp_disp:.1f}")
 st.metric("線間密着限界 (mm)", f"{S_max_stroke:.1f}")
@@ -126,7 +102,7 @@ with col_gap1:
 with col_gap2:
     st.metric("荒巻部 線間隙間 (mm)", f"{max(0.0, gap_coarse):.2f}")
 
-# --- 7. グラフ描画 ---
+# --- 6. グラフ描画 ---
 st.write("---")
 x_plot = np.linspace(0, S_max_stroke, 400)
 y_vals = np.array([to_disp(calc_load_n(v)) for v in x_plot])
@@ -162,11 +138,12 @@ fig.add_annotation(
 fig.update_layout(template="simple_white", xaxis_title="ストローク量 (mm)", yaxis_title=f"荷重 ({load_unit})", height=600)
 st.plotly_chart(fig, use_container_width=True, key="rate_tool_chart_v25")
 
-# --- 8. 予告セクション ---
+# --- 7. 予告セクション ---
 st.divider()
 st.subheader("関連ツール・予告")
 col_next1, col_next2 = st.columns(2)
 with col_next1:
     st.button("▶ リアサスリンクシミュレーター（準備中）", key="btn_rear_sim")
 with col_next2:
-    st.button("▶ フロントフォークエアバネシミュレーター（更新中）", key="btn_fork_sim_pre")
+    # フォークシミュレーターへのボタン
+    st.markdown("▶ [フロントフォークエアバネシミュレーター v3.0](https://fork-spring-sim.streamlit.app/)")
