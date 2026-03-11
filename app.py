@@ -13,15 +13,19 @@ ga_code = """
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-N6J2MEPVXL');
+  
+  // Streamlitの箱の中からでも認識できるようにタイトルを強制指定
+  gtag('config', 'G-N6J2MEPVXL', {
+    'page_title': 'ばねレート簡易判定ツール',
+    'page_path': '/'
+  });
 </script>
 """
-components.html(ga_code, height=0)
+# ↓ここが「0」だとブラウザに無視されるため、必ず「1」にします
+components.html(ga_code, height=1)
 
 # --- 3. タイトルと説明 ---
 st.title("ばねレート簡易判定ツール")
-st.caption("YouTubeチャンネル『こぼれ小話 タミケンバーン』連動ツール")
-st.caption("※本ツールは診断ではなく、ばねの性格を概算数値で把握するためのものです")
 
 st.markdown("▶ 使用方法解説動画（こぼれ小話タミケンバーンYouTubeチャンネル） \nhttps://youtu.be/rES0bE0S45Y")
 st.divider()
